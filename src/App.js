@@ -8,7 +8,24 @@ import PageAdvanced from './components/PageAdvanced/PageAdvanced';
 import NotFound from './components/NotFound/NotFound';
 import Menu from "./components/Menu/Menu";
 
-const baseUrl = 'http://127.0.0.1:8000';
+const baseUrl = 'http://192.168.1.142:8080';
+const thingName = 'wothvac';
+
+const getProperty = (prop) => {
+    return axios.get(`${baseUrl}/${thingName}/properties/${prop}`);
+}
+
+const writeProperty = (prop, value) => {
+    return axios.put(`${baseUrl}/${thingName}/properties/${prop}`, value, {
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+
+const invokeAction = (action, value) => {
+    return axios.post(`${baseUrl}/${thingName}/actions/${action}`, value);
+}
 
 class App extends React.Component {
     constructor(props) {
@@ -16,34 +33,95 @@ class App extends React.Component {
         this.state = {
             temperatureFeed: 0,
             temperatureOutside: 0,
-            temperatureInside: 0
+            temperatureInside: 0,
+            temperatureHe1: 0,
+            temperatureHe2: 0,
+            temperatureHe3: 0,
+            valveStates: [],
+            mode: 'autoWinter',
+            hysteresis: 0
         };
+        this.thing = undefined;
     }
 
     loadData() {
         axios.all([
-            axios.get(`${baseUrl}/properties/temperatureFeed`),
-            axios.get(`${baseUrl}/properties/temperatureOutside`),
-            axios.get(`${baseUrl}/properties/temperatureInside`)
+            getProperty('temperatureFeed'),
+            getProperty('temperatureOutside'),
+            getProperty('temperatureInside'),
+            getProperty('temperatureHe1'),
+            getProperty('temperatureHe2'),
+            getProperty('temperatureHe3'),
+            getProperty('mode'),
+            getProperty('hysteresis'),
+            getProperty('valveOpened1'),
+            getProperty('valveOpened2'),
+            getProperty('valveOpened3'),
+            getProperty('valveOpened4')
         ])
-            .then(axios.spread((temperatureFeed,
-                                temperatureOutside,
-                                temperatureInside) => {
+            .then(axios.spread((
+                temperatureFeed,
+                temperatureOutside,
+                temperatureInside,
+                temperatureHe1,
+                temperatureHe2,
+                temperatureHe3,
+                mode,
+                hysteresis,
+                valveOpened1,
+                valveOpened2,
+                valveOpened3,
+                valveOpened4) => {
                 this.setState({
-                    temperatureFeed: temperatureFeed.data.results,
-                    temperatureOutside: temperatureOutside.data.results,
-                    temperatureInside: temperatureInside.data.results,
+                    temperatureFeed: temperatureFeed.data,
+                    temperatureOutside: temperatureOutside.data,
+                    temperatureInside: temperatureInside.data,
+                    temperatureHe1: temperatureHe1.data,
+                    temperatureHe2: temperatureHe2.data,
+                    temperatureHe3: temperatureHe3.data,
+                    mode: mode.data,
+                    hysteresis: hysteresis.data,
+                    valveStates: [valveOpened1.data, valveOpened2.data, valveOpened3.data, valveOpened4.data]
                 })
             }))
             .catch(error => console.error(error));
     }
 
+    async updateValveState(number) {
+        let opened = await getProperty(`valveOpened${number}`);
+        opened = opened.data;
+        let valveStates = [...this.state.valveStates];
+        valveStates[number - 1] = opened;
+        this.setState({valveStates});
+    }
+
+    async openValve(number) {
+        await invokeAction(`openValve${number}`);
+    }
+
+    async closeValve(number) {
+        await invokeAction(`closeValve${number}`);
+    }
+
+    setHysteresis(hysteresis) {
+        this.setState({hysteresis});
+        writeProperty('hysteresis', hysteresis);
+    }
+
+    setMode(mode) {
+        // TODO: get mode from rpi
+        this.setState({mode});
+        writeProperty('mode', mode);
+    }
+
     setFeedTemperature(temperature) {
         this.setState({temperatureFeed: temperature});
+        writeProperty('temperatureFeed', temperature);
     }
 
     componentDidMount() {
-        // this.loadData();
+        this.loadData();
+        setInterval(() => this.loadData(), 10000);
     }
 
     render() {
@@ -54,7 +132,9 @@ class App extends React.Component {
                     <Route exact path='/simple' component={() => {
                         return <PageSimple temperatureFeed={this.state.temperatureFeed}
                                            temperatureOutside={this.state.temperatureOutside}
-                                           temperatureInside={this.state.temperatureInside}
+                                           temperatureHe1={this.state.temperatureHe1}
+                                           temperatureHe2={this.state.temperatureHe2}
+                                           temperatureHe3={this.state.temperatureHe3}
                                            setFeedTemperature={(temperature) => this.setFeedTemperature(temperature)}
                         />;
                     }}/>
@@ -62,7 +142,17 @@ class App extends React.Component {
                         return <PageAdvanced temperatureFeed={this.state.temperatureFeed}
                                              temperatureOutside={this.state.temperatureOutside}
                                              temperatureInside={this.state.temperatureInside}
+                                             temperatureHe1={this.state.temperatureHe1}
+                                             temperatureHe2={this.state.temperatureHe2}
+                                             temperatureHe3={this.state.temperatureHe3}
                                              setFeedTemperature={(temperature) => this.setFeedTemperature(temperature)}
+                                             valveStates={this.state.valveStates}
+                                             updateValveState={(number) => this.updateValveState(number)}
+                                             openValve={(number) => this.openValve(number)}
+                                             closeValve={(number) => this.closeValve(number)}
+                                             mode={this.state.mode}
+                                             hysteresis={this.state.hysteresis}
+                                             setMode={(mode) => this.setMode(mode)}
                         />;
                     }}/>
                     <Redirect from='/' to='/simple'/>
