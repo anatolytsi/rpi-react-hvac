@@ -46,24 +46,28 @@ const PageAdvanced = (
                        updateValveState={updateValveState}
                        openValve={openValve}
                        closeValve={closeValve}
+                       mode={mode}
                 />
                 <Valve number={2}
                        states={valveStates}
                        updateValveState={updateValveState}
                        openValve={openValve}
                        closeValve={closeValve}
+                       mode={mode}
                 />
                 <Valve number={3}
                        states={valveStates}
                        updateValveState={updateValveState}
                        openValve={openValve}
                        closeValve={closeValve}
+                       mode={mode}
                 />
                 <Valve number={4}
                        states={valveStates}
                        updateValveState={updateValveState}
                        openValve={openValve}
                        closeValve={closeValve}
+                       mode={mode}
                 />
             </header>
         </div>
