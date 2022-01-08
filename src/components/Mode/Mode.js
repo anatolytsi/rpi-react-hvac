@@ -11,8 +11,8 @@ const Mode = ({mode, setMode}) => {
                 value={mode}
                 onChange={event => setMode(event.target.value)}
             >
-                <option value='autoWinter'>Авто (Лето)</option>
-                <option value='autoSummer'>Авто (Зима)</option>
+                <option value='autoWinter'>Авто (Зима)</option>
+                <option value='autoSummer'>Авто (Лето)</option>
                 <option value='manual'>Ручной</option>
             </Form.Control>
         </Form.Group>
