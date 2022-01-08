@@ -6,6 +6,7 @@ import Mode from '../Mode/Mode';
 import Temperatures from '../Temperatures/Temperatures';
 import FeedTemperature from "../FeedTemperature/FeedTemperature";
 import Valve from "../Valve/Valve";
+import Hysteresis from "../Hysteresis/Hysteresis";
 
 const PageAdvanced = (
     {
@@ -22,6 +23,7 @@ const PageAdvanced = (
         closeValve,
         mode,
         hysteresis,
+        setHysteresis,
         setMode
     }) => {
     return (
@@ -38,6 +40,7 @@ const PageAdvanced = (
                               temperatureHe3={temperatureHe3}
                 />
                 <Mode mode={mode} setMode={setMode}/>
+                <Hysteresis hysteresis={hysteresis} setHysteresis={setHysteresis}/>
                 <Valve number={1}
                        states={valveStates}
                        updateValveState={updateValveState}

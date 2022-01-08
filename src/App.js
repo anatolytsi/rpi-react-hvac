@@ -244,6 +244,7 @@ class App extends React.Component {
                                              closeValve={(number) => this.closeValve(number)}
                                              mode={this.state.mode}
                                              hysteresis={this.state.hysteresis}
+                                             setHysteresis={(hysteresis) => this.setHysteresis(hysteresis)}
                                              setMode={(mode) => this.setMode(mode)}
                         />;
                     }}/>
