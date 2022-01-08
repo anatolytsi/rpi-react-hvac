@@ -228,7 +228,7 @@ class App extends React.Component {
                                            setFeedTemperature={(temperature) => this.setFeedTemperature(temperature)}
                         />;
                     }}/>
-                    <Route exact path='/complex' component={() => {
+                    <Route exact path='/advanced' component={() => {
                         if (!this.isAuthenticated()) return <Redirect to='/login'/>;
                         if (!this.isSuperuser()) return <Redirect to='/simple'/>;
                         return <PageAdvanced temperatureFeed={this.state.temperatureFeed}
@@ -249,7 +249,7 @@ class App extends React.Component {
                         />;
                     }}/>
                     <Route exact path='/login' component={() => {
-                        if (this.isAuthenticated() && this.isSuperuser()) return <Redirect to='/complex'/>;
+                        if (this.isAuthenticated() && this.isSuperuser()) return <Redirect to='/advanced'/>;
                         if (this.isAuthenticated()) return <Redirect to='/'/>;
                         return <LoginForm getAuth={(username, password) => this.getPassAndUser(username, password)}/>
                     }}/>
