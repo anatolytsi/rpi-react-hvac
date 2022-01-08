@@ -16,7 +16,7 @@ class Menu extends React.Component {
                             Простая
                         </Link>
                         {this.props.isSuperuser ?
-                            <Link to='/complex' className='nav-item nav-link active'>
+                            <Link to='/advanced' className='nav-item nav-link active'>
                                 Расширенная
                             </Link> :
                             <div></div>
