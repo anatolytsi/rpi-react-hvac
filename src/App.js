@@ -10,8 +10,6 @@ import PageAdvanced from './components/PageAdvanced/PageAdvanced';
 import NotFound from './components/NotFound/NotFound';
 import Menu from './components/Menu/Menu';
 
-let crypto = require('crypto');
-
 require('dotenv').config();
 
 const baseUrl = process.env.REACT_APP_THING_HOST;
@@ -28,9 +26,12 @@ const writeProperty = (prop, value) => {
         }
     });
 }
-
 const invokeAction = (action, value) => {
-    return axios.post(`${baseUrl}/${thingName}/actions/${action}`, value);
+    return axios.post(`${baseUrl}/${thingName}/actions/${action}`, value, {
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
 }
 
 class App extends React.Component {
@@ -46,15 +47,14 @@ class App extends React.Component {
             valveStates: [],
             mode: 'autoWinter',
             hysteresis: 0,
-            password: '',
-            username: '',
-            isSuperuser: false
+            isSuperuser: false,
+            token: ''
         };
         this.thing = undefined;
     }
 
     logout() {
-        this.setPassAndUser('', '');
+        this.setToken('', '');
         this.setState({
             temperatureFeed: 0,
             temperatureOutside: 0,
@@ -65,68 +65,47 @@ class App extends React.Component {
             valveStates: [],
             mode: 'autoWinter',
             hysteresis: 0,
-            isSuperuser: false
+            isSuperuser: false,
+            token: ''
         });
     }
 
     isAuthenticated() {
-        return !!this.state.password;
+        return !!this.state.token;
     }
 
     isSuperuser() {
         return this.state.isSuperuser;
     }
 
-    setPassAndUser(password, username) {
+    setToken(token) {
         const cookies = new Cookies();
-        cookies.set('password', password);
-        cookies.set('username', username);
-        this.setState({password, username}, () => this.loadData());
-    }
-
-    getPassAndUser(username, password) {
-        console.log('Authing')
-        let usernames = [process.env.REACT_APP_USERNAME, process.env.REACT_APP_SU_USERNAME];
-        let passwords = [process.env.REACT_APP_PASSWORD, process.env.REACT_APP_SU_PASSWORD];
-        let userCorrect = usernames.indexOf(username) > -1;
-        let passCorrect = passwords.indexOf(password) > -1;
-        if (userCorrect && passCorrect) {
-            if (username === usernames[1]) this.setState({isSuperuser: true});
-            let passwordHash = crypto.createHash('md5').update(password).digest('hex');
-            let usernameHash = crypto.createHash('md5').update(username).digest('hex');
-            this.setPassAndUser(passwordHash, usernameHash);
-            return
-        }
-        let usernamesHash = [
-            crypto.createHash('md5').update(process.env.REACT_APP_USERNAME).digest('hex'),
-            crypto.createHash('md5').update(process.env.REACT_APP_SU_USERNAME).digest('hex')
-        ];
-        let passwordsHash = [
-            crypto.createHash(process.env.REACT_APP_PASSWORD).digest('hex'),
-            crypto.createHash(process.env.REACT_APP_SU_PASSWORD).digest('hex')
-        ];
-        let userHashCorrect = usernamesHash.indexOf(username) > -1;
-        let passHashCorrect = passwordsHash.indexOf(password) > -1;
-        if (userHashCorrect && passHashCorrect) {
-            if (username === usernamesHash[1]) this.setState({isSuperuser: true});
-            this.setPassAndUser(password, username);
-            return
-        }
-        alert('Invalid login or password');
-    }
-
-    getPassAndUserFromStorage() {
-        const cookies = new Cookies();
-        const username = cookies.get('username');
-        const password = cookies.get('password');
-        let usernameSuHash = crypto.createHash('md5').update(process.env.REACT_APP_SU_USERNAME).digest('hex');
-        if (username === usernameSuHash) {
-            this.setState({isSuperuser: true})
-        }
-        this.setState({password, username}, () => {
+        cookies.set('token', token);
+        this.setState({token}, () => {
             this.loadData();
             setInterval(() => this.loadData(), 10000);
         });
+    }
+
+    getToken({username = '', password = '', token = ''}) {
+        if (!username && !password && !token) return;
+        invokeAction('authenticate', {username, password, token})
+            .then((response) => {
+                if (!response.data.token) {
+                    alert('Invalid login or password');
+                    return
+                }
+                this.setState({isSuperuser: response.data.isSu});
+                this.setToken(response.data.token);
+            }).catch((err) => {
+            console.error(err)
+        })
+    }
+
+    getTokenAndPincodeFromStorage() {
+        const cookies = new Cookies();
+        const token = cookies.get('token');
+        this.getToken({token});
     }
 
     loadData() {
@@ -181,11 +160,11 @@ class App extends React.Component {
     }
 
     async openValve(number) {
-        await invokeAction(`openValve${number}`);
+        await invokeAction(`openValve${number}`, this.state.token);
     }
 
     async closeValve(number) {
-        await invokeAction(`closeValve${number}`);
+        await invokeAction(`closeValve${number}`, this.state.token);
     }
 
     setHysteresis(hysteresis) {
@@ -205,7 +184,7 @@ class App extends React.Component {
     }
 
     componentDidMount() {
-        this.getPassAndUserFromStorage()
+        this.getTokenAndPincodeFromStorage()
     }
 
     render() {
@@ -251,7 +230,8 @@ class App extends React.Component {
                     <Route exact path='/login' component={() => {
                         if (this.isAuthenticated() && this.isSuperuser()) return <Redirect to='/advanced'/>;
                         if (this.isAuthenticated()) return <Redirect to='/'/>;
-                        return <LoginForm getAuth={(username, password) => this.getPassAndUser(username, password)}/>
+                        return <LoginForm
+                            getAuth={(username, password) => this.getToken({username, password})}/>
                     }}/>
                     <Redirect from='/' to='/simple'/>
                     <Route component={NotFound}/>
