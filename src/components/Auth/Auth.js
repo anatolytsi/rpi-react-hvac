@@ -15,7 +15,6 @@ class LoginForm extends React.Component {
 
     submitHandler(event) {
         event.preventDefault();
-        console.log('Got submit handler')
         this.props.getAuth(this.state.username, this.state.password);
     }
 
