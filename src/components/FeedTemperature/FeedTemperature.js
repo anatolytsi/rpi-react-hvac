@@ -23,7 +23,7 @@ const FeedTemperature = ({temperatureFeed, setFeedTemperature}) => {
                 size={'lg'}
                 tooltipPlacement={'top'}
             />
-            <Input value={value} setValue={setNewValue}/>
+            <Input value={value} setValue={setNewValue} step={5}/>
         </div>
     )
 }
