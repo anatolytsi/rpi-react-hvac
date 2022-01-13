@@ -3,6 +3,7 @@ import {BrowserRouter as Router, Redirect, Route, Switch} from 'react-router-dom
 import axios from 'axios';
 import './App.css'
 import Cookies from 'universal-cookie/es6';
+import MD5 from 'crypto-js/md5';
 
 import LoginForm from './components/Auth/Auth';
 import PageSimple from './components/PageSimple/PageSimple'
@@ -13,26 +14,7 @@ import Menu from './components/Menu/Menu';
 require('dotenv').config();
 
 const baseUrl = process.env.REACT_APP_THING_HOST;
-const thingName = process.env.REACT_APP_THING_NAME;
-
-const getProperty = (prop) => {
-    return axios.get(`${baseUrl}/${thingName}/properties/${prop}`);
-}
-
-const writeProperty = (prop, value) => {
-    return axios.put(`${baseUrl}/${thingName}/properties/${prop}`, value, {
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    });
-}
-const invokeAction = (action, value) => {
-    return axios.post(`${baseUrl}/${thingName}/actions/${action}`, value, {
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    });
-}
+const getUrl = (path) => `${baseUrl}/${path}`;
 
 class App extends React.Component {
     constructor(props) {
@@ -78,50 +60,65 @@ class App extends React.Component {
         return this.state.isSuperuser;
     }
 
+    getHeaders() {
+        let headers = {
+            'Content-Type' : 'application/json',
+            'Accept' : 'application/json'
+        }
+        if (this.isAuthenticated()) {
+            headers['Authorization'] = `Basic ${this.state.token}`;
+        }
+        return headers;
+    }
+
     setToken(token) {
         const cookies = new Cookies();
-        cookies.set('token', token);
+        cookies.set('token', token, {secure: true, sameSite: 'none'});
         this.setState({token}, () => {
             this.loadData();
             setInterval(() => this.loadData(), 10000);
         });
     }
 
-    getToken({username = '', password = '', token = ''}) {
-        if (!username && !password && !token) return;
-        invokeAction('authenticate', {username, password, token})
+    getToken({token, username, password}) {
+        if (!(token || (username && password))) return;
+        if (!token) {
+            username = MD5(username).toString();
+            password = MD5(password).toString();
+            token = btoa(`${username}:${password}`);
+        }
+        axios.get(getUrl('suAccess'), {
+            headers: {
+                'Authorization': `Basic ${token}`
+            }})
             .then((response) => {
-                if (!response.data.token) {
-                    alert('Invalid login or password');
-                    return
-                }
-                this.setState({isSuperuser: response.data.isSu});
-                this.setToken(response.data.token);
-            }).catch((err) => {
-            console.error(err)
-        })
+                this.setState({isSuperuser: response.data});
+                this.setToken(token);
+            })
+            .catch((err) => console.error(err));
     }
 
-    getTokenAndPincodeFromStorage() {
+    getTokenFromStorage() {
         const cookies = new Cookies();
         const token = cookies.get('token');
         this.getToken({token});
     }
 
     loadData() {
+        const headers = this.getHeaders();
         axios.all([
-            getProperty('temperatureFeed'),
-            getProperty('temperatureOutside'),
-            getProperty('temperatureInside'),
-            getProperty('temperatureHe1'),
-            getProperty('temperatureHe2'),
-            getProperty('temperatureHe3'),
-            getProperty('mode'),
-            getProperty('hysteresis'),
-            getProperty('valveOpened1'),
-            getProperty('valveOpened2'),
-            getProperty('valveOpened3'),
-            getProperty('valveOpened4')
+            axios.get(getUrl('temperatureFeed'), {headers}),
+            axios.get(getUrl('temperatureOutside'), {headers}),
+            axios.get(getUrl('temperatureInside'), {headers}),
+            axios.get(getUrl('temperatureHe/1'), {headers}),
+            axios.get(getUrl('temperatureHe/2'), {headers}),
+            axios.get(getUrl('temperatureHe/3'), {headers}),
+            axios.get(getUrl('mode'), {headers}),
+            axios.get(getUrl('hysteresis'), {headers}),
+            axios.get(getUrl('valve/1'), {headers}),
+            axios.get(getUrl('valve/2'), {headers}),
+            axios.get(getUrl('valve/3'), {headers}),
+            axios.get(getUrl('valve/4'), {headers})
         ])
             .then(axios.spread((
                 temperatureFeed,
@@ -152,7 +149,8 @@ class App extends React.Component {
     }
 
     async updateValveState(number) {
-        let opened = await getProperty(`valveOpened${number}`);
+        const headers = this.getHeaders();
+        let opened = await axios.get(getUrl(`valve/${number}`), {headers});
         opened = opened.data;
         let valveStates = [...this.state.valveStates];
         valveStates[number - 1] = opened;
@@ -160,31 +158,56 @@ class App extends React.Component {
     }
 
     async openValve(number) {
-        await invokeAction(`openValve${number}`, this.state.token);
+        const headers = this.getHeaders();
+        await axios.post(
+            getUrl(`valve/${number}`),
+            {'action': 'open'},
+            {headers}
+        );
     }
 
     async closeValve(number) {
-        await invokeAction(`closeValve${number}`, this.state.token);
+        const headers = this.getHeaders();
+        await axios.post(
+            getUrl(`valve/${number}`),
+            {'action': 'close'},
+            {headers}
+        );
     }
 
-    setHysteresis(hysteresis) {
+    async setHysteresis(hysteresis) {
+        const headers = this.getHeaders();
+        await axios.post(
+            getUrl('hysteresis'),
+            {'value': hysteresis},
+            {headers}
+        );
         this.setState({hysteresis});
-        writeProperty('hysteresis', hysteresis);
     }
 
-    setMode(mode) {
+    async setMode(mode) {
         // TODO: get mode from rpi
+        const headers = this.getHeaders();
+        await axios.post(
+            getUrl('mode'),
+            {'type': mode},
+            {headers}
+        );
         this.setState({mode});
-        writeProperty('mode', mode);
     }
 
-    setFeedTemperature(temperature) {
+    async setFeedTemperature(temperature) {
         this.setState({temperatureFeed: temperature});
-        writeProperty('temperatureFeed', temperature);
+        const headers = this.getHeaders();
+        await axios.post(
+            getUrl('temperatureFeed'),
+            {'value': temperature},
+            {headers}
+        );
     }
 
     componentDidMount() {
-        this.getTokenAndPincodeFromStorage()
+        this.getTokenFromStorage()
     }
 
     render() {
@@ -216,15 +239,15 @@ class App extends React.Component {
                                              temperatureHe1={this.state.temperatureHe1}
                                              temperatureHe2={this.state.temperatureHe2}
                                              temperatureHe3={this.state.temperatureHe3}
-                                             setFeedTemperature={(temperature) => this.setFeedTemperature(temperature)}
+                                             setFeedTemperature={async (temperature) => await this.setFeedTemperature(temperature)}
                                              valveStates={this.state.valveStates}
-                                             updateValveState={(number) => this.updateValveState(number)}
-                                             openValve={(number) => this.openValve(number)}
-                                             closeValve={(number) => this.closeValve(number)}
+                                             updateValveState={async (number) => await this.updateValveState(number)}
+                                             openValve={async (number) => await this.openValve(number)}
+                                             closeValve={async (number) => await this.closeValve(number)}
                                              mode={this.state.mode}
                                              hysteresis={this.state.hysteresis}
-                                             setHysteresis={(hysteresis) => this.setHysteresis(hysteresis)}
-                                             setMode={(mode) => this.setMode(mode)}
+                                             setHysteresis={async (hysteresis) => await this.setHysteresis(hysteresis)}
+                                             setMode={async (mode) => await this.setMode(mode)}
                         />;
                     }}/>
                     <Route exact path='/login' component={() => {
