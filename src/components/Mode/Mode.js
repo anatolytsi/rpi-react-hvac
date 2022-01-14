@@ -7,7 +7,6 @@ const Mode = ({mode, setMode}) => {
             <Form.Label>Режим работы:</Form.Label>
             <Form.Control
                 as='select'
-                custom
                 value={mode}
                 onChange={event => setMode(event.target.value)}
             >

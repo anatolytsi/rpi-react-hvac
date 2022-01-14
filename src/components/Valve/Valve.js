@@ -19,6 +19,7 @@ const Valve = ({number, states, updateValveState, openValve, closeValve, mode}) 
     return (
         <Form>
             <Form.Switch
+                onChange={updateState}
                 onClick={onSwitchAction}
                 id='custom-switch'
                 label={name}
