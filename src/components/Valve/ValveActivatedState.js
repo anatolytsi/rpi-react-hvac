@@ -11,7 +11,7 @@ const ValveActivatedState = ({number, states, updateValveActiveState, setValveAc
     const onSwitchAction = () => {
         setValveActivated(number, swValue).then(updateState);
     };
-    let name = `Вентиль ${number} активирован`;
+    let name = `Вентиль ${number} ${swValue ? '': 'де'}активирован`;
     return (
         <Form>
             <Form.Switch
@@ -25,4 +25,4 @@ const ValveActivatedState = ({number, states, updateValveActiveState, setValveAc
     )
 }
 
-export default Valve;
+export default ValveActivatedState;
