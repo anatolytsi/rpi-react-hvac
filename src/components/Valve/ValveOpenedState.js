@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {Form} from 'react-bootstrap';
 
-const Valve = ({number, states, updateValveState, openValve, closeValve, mode}) => {
+const ValveOpenedState = ({number, states, updateValveState, openValve, closeValve, mode}) => {
     const [swValue, setSw] = useState(states[number - 1]);
     const updateState = async () => {
         await updateValveState(number);
@@ -15,7 +15,7 @@ const Valve = ({number, states, updateValveState, openValve, closeValve, mode}) 
             openValve(number).then(updateState);
         }
     };
-    let name = `Вентиль ${number}`;
+    let name = `Вентиль ${number} открыт`;
     return (
         <Form>
             <Form.Switch

@@ -27,6 +27,7 @@ class App extends React.Component {
             temperatureHe2: 0,
             temperatureHe3: 0,
             valveStates: [],
+            valveActiveStates: [],
             mode: 'autoWinter',
             hysteresis: 0,
             isSuperuser: false,
@@ -45,6 +46,7 @@ class App extends React.Component {
             temperatureHe2: 0,
             temperatureHe3: 0,
             valveStates: [],
+            valveActiveStates: [],
             mode: 'autoWinter',
             hysteresis: 0,
             isSuperuser: false,
@@ -118,7 +120,11 @@ class App extends React.Component {
             axios.get(getUrl('valve/1'), {headers}),
             axios.get(getUrl('valve/2'), {headers}),
             axios.get(getUrl('valve/3'), {headers}),
-            axios.get(getUrl('valve/4'), {headers})
+            axios.get(getUrl('valve/4'), {headers}),
+            axios.get(getUrl('valveActivated/1'), {headers}),
+            axios.get(getUrl('valveActivated/2'), {headers}),
+            axios.get(getUrl('valveActivated/3'), {headers}),
+            axios.get(getUrl('valveActivated/4'), {headers})
         ])
             .then(axios.spread((
                 temperatureFeed,
@@ -132,7 +138,11 @@ class App extends React.Component {
                 valveOpened1,
                 valveOpened2,
                 valveOpened3,
-                valveOpened4) => {
+                valveOpened4,
+                valveActivated1,
+                valveActivated2,
+                valveActivated3,
+                valveActivated4) => {
                 this.setState({
                     temperatureFeed: temperatureFeed.data,
                     temperatureOutside: temperatureOutside.data,
@@ -142,7 +152,8 @@ class App extends React.Component {
                     temperatureHe3: temperatureHe3.data,
                     mode: mode.data,
                     hysteresis: hysteresis.data,
-                    valveStates: [valveOpened1.data, valveOpened2.data, valveOpened3.data, valveOpened4.data]
+                    valveStates: [valveOpened1.data, valveOpened2.data, valveOpened3.data, valveOpened4.data],
+                    valveActiveStates: [valveActivated1.data, valveActivated2.data, valveActivated3.data, valveActivated4.data]
                 })
             }))
             .catch(error => console.error(error));
@@ -155,6 +166,24 @@ class App extends React.Component {
         let valveStates = [...this.state.valveStates];
         valveStates[number - 1] = opened;
         this.setState({valveStates});
+    }
+
+    async updateValveActiveState(number) {
+        const headers = this.getHeaders();
+        let valveActive = await axios.get(getUrl(`valveActivated/${number}`), {headers});
+        valveActive = valveActive.data;
+        let valveActiveStates = [...this.state.valveActiveStates];
+        valveActiveStates[number - 1] = valveActive;
+        this.setState({valveActiveStates});
+    }
+
+    async setValveActivated(number, activated) {
+        const headers = this.getHeaders();
+        await axios.post(
+            getUrl(`valveActivated/${number}`),
+            {'value': activated},
+            {headers}
+        );
     }
 
     async openValve(number) {
@@ -241,7 +270,10 @@ class App extends React.Component {
                                              temperatureHe3={this.state.temperatureHe3}
                                              setFeedTemperature={async (temperature) => await this.setFeedTemperature(temperature)}
                                              valveStates={this.state.valveStates}
+                                             valveActiveStates={this.state.valveActiveStates}
                                              updateValveState={async (number) => await this.updateValveState(number)}
+                                             setValveActivated={async (number, activated) => await this.setValveActivated(number, activated)}
+                                             updateValveActiveState={async (number) => await this.updateValveActiveState(number)}
                                              openValve={async (number) => await this.openValve(number)}
                                              closeValve={async (number) => await this.closeValve(number)}
                                              mode={this.state.mode}

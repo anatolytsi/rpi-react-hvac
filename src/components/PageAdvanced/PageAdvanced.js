@@ -5,7 +5,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Mode from '../Mode/Mode';
 import Temperatures from '../Temperatures/Temperatures';
 import FeedTemperature from "../FeedTemperature/FeedTemperature";
-import Valve from "../Valve/Valve";
+import ValveOpenedState from "../Valve/ValveOpenedState";
+import ValveActivatedState from "../Valve/ValveActivatedState";
 import Hysteresis from "../Hysteresis/Hysteresis";
 
 const PageAdvanced = (
@@ -18,7 +19,10 @@ const PageAdvanced = (
         temperatureHe3,
         setFeedTemperature,
         valveStates,
+        valveActiveStates,
         updateValveState,
+        setValveActivated,
+        updateValveActiveState,
         openValve,
         closeValve,
         mode,
@@ -41,33 +45,53 @@ const PageAdvanced = (
                 />
                 <Mode mode={mode} setMode={setMode}/>
                 <Hysteresis hysteresis={hysteresis} setHysteresis={setHysteresis}/>
-                <Valve number={1}
-                       states={valveStates}
-                       updateValveState={updateValveState}
-                       openValve={openValve}
-                       closeValve={closeValve}
-                       mode={mode}
+                <ValveOpenedState number={1}
+                                  states={valveStates}
+                                  updateValveState={updateValveState}
+                                  openValve={openValve}
+                                  closeValve={closeValve}
+                                  mode={mode}
                 />
-                <Valve number={2}
-                       states={valveStates}
-                       updateValveState={updateValveState}
-                       openValve={openValve}
-                       closeValve={closeValve}
-                       mode={mode}
+                <ValveOpenedState number={2}
+                                  states={valveStates}
+                                  updateValveState={updateValveState}
+                                  openValve={openValve}
+                                  closeValve={closeValve}
+                                  mode={mode}
                 />
-                <Valve number={3}
-                       states={valveStates}
-                       updateValveState={updateValveState}
-                       openValve={openValve}
-                       closeValve={closeValve}
-                       mode={mode}
+                <ValveOpenedState number={3}
+                                  states={valveStates}
+                                  updateValveState={updateValveState}
+                                  openValve={openValve}
+                                  closeValve={closeValve}
+                                  mode={mode}
                 />
-                <Valve number={4}
-                       states={valveStates}
-                       updateValveState={updateValveState}
-                       openValve={openValve}
-                       closeValve={closeValve}
-                       mode={mode}
+                <ValveOpenedState number={4}
+                                  states={valveStates}
+                                  updateValveState={updateValveState}
+                                  openValve={openValve}
+                                  closeValve={closeValve}
+                                  mode={mode}
+                />
+                <ValveActivatedState number={1}
+                                     states={valveActiveStates}
+                                     updateValveActiveState={updateValveActiveState}
+                                     setValveActivated={setValveActivated}
+                />
+                <ValveActivatedState number={2}
+                                     states={valveActiveStates}
+                                     updateValveActiveState={updateValveActiveState}
+                                     setValveActivated={setValveActivated}
+                />
+                <ValveActivatedState number={3}
+                                     states={valveActiveStates}
+                                     updateValveActiveState={updateValveActiveState}
+                                     setValveActivated={setValveActivated}
+                />
+                <ValveActivatedState number={4}
+                                     states={valveActiveStates}
+                                     updateValveActiveState={updateValveActiveState}
+                                     setValveActivated={setValveActivated}
                 />
             </header>
         </div>
