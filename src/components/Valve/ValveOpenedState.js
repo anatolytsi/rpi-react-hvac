@@ -15,7 +15,7 @@ const ValveOpenedState = ({number, states, updateValveState, openValve, closeVal
             openValve(number).then(updateState);
         }
     };
-    let name = `Вентиль ${number} ${swValue ? 'закрыт' : 'открыт'}`;
+    let name = `Вентиль ${number} ${swValue ?'открыт' : 'закрыт'}`;
     return (
         <Form>
             <Form.Switch
