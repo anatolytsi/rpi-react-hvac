@@ -26,9 +26,9 @@ class App extends React.Component {
             temperatureHe1: 0,
             temperatureHe2: 0,
             temperatureHe3: 0,
-            valveStates: [],
-            valveActiveStates: [],
-            mode: 'autoWinter',
+            valveStates: [false, false, false, false],
+            valveActiveStates: [true, true, true, true],
+            mode: 'manual',
             hysteresis: 0,
             isSuperuser: false,
             token: ''
@@ -45,9 +45,9 @@ class App extends React.Component {
             temperatureHe1: 0,
             temperatureHe2: 0,
             temperatureHe3: 0,
-            valveStates: [],
-            valveActiveStates: [],
-            mode: 'autoWinter',
+            valveStates: [false, false, false, false],
+            valveActiveStates: [true, true, true, true],
+            mode: 'manual',
             hysteresis: 0,
             isSuperuser: false,
             token: ''
@@ -108,55 +108,23 @@ class App extends React.Component {
 
     loadData() {
         const headers = this.getHeaders();
-        axios.all([
-            axios.get(getUrl('temperatureFeed'), {headers}),
-            axios.get(getUrl('temperatureOutside'), {headers}),
-            axios.get(getUrl('temperatureInside'), {headers}),
-            axios.get(getUrl('temperatureHe/1'), {headers}),
-            axios.get(getUrl('temperatureHe/2'), {headers}),
-            axios.get(getUrl('temperatureHe/3'), {headers}),
-            axios.get(getUrl('mode'), {headers}),
-            axios.get(getUrl('hysteresis'), {headers}),
-            axios.get(getUrl('valve/1'), {headers}),
-            axios.get(getUrl('valve/2'), {headers}),
-            axios.get(getUrl('valve/3'), {headers}),
-            axios.get(getUrl('valve/4'), {headers}),
-            axios.get(getUrl('valveActivated/1'), {headers}),
-            axios.get(getUrl('valveActivated/2'), {headers}),
-            axios.get(getUrl('valveActivated/3'), {headers}),
-            axios.get(getUrl('valveActivated/4'), {headers})
-        ])
-            .then(axios.spread((
-                temperatureFeed,
-                temperatureOutside,
-                temperatureInside,
-                temperatureHe1,
-                temperatureHe2,
-                temperatureHe3,
-                mode,
-                hysteresis,
-                valveOpened1,
-                valveOpened2,
-                valveOpened3,
-                valveOpened4,
-                valveActivated1,
-                valveActivated2,
-                valveActivated3,
-                valveActivated4) => {
-                this.setState({
-                    temperatureFeed: temperatureFeed.data,
-                    temperatureOutside: temperatureOutside.data,
-                    temperatureInside: temperatureInside.data,
-                    temperatureHe1: temperatureHe1.data,
-                    temperatureHe2: temperatureHe2.data,
-                    temperatureHe3: temperatureHe3.data,
-                    mode: mode.data,
-                    hysteresis: hysteresis.data,
-                    valveStates: [valveOpened1.data, valveOpened2.data, valveOpened3.data, valveOpened4.data],
-                    valveActiveStates: [valveActivated1.data, valveActivated2.data, valveActivated3.data, valveActivated4.data]
-                })
-            }))
-            .catch(error => console.error(error));
+        axios.get(getUrl('fullState'), {headers})
+        .then((response) => {
+            console.log(response)
+            this.setState({
+                temperatureFeed: response.data.feed_temperature,
+                temperatureOutside: response.data.outside_temperature,
+                temperatureInside: response.data.inside_temperature,
+                temperatureHe1: response.data.he_temperatures[0],
+                temperatureHe2: response.data.he_temperatures[1],
+                temperatureHe3: response.data.he_temperatures[2],
+                mode: response.data.mode,
+                hysteresis: response.data.hysteresis,
+                valveStates: [...response.data.valves_states],
+                valveActiveStates: [...response.data.valves_activated_states]
+            })
+        })
+        .catch(error => console.error(error));
     }
 
     async updateValveState(number) {
