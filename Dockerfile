@@ -1,12 +1,17 @@
 FROM node:alpine
 
 
-RUN mkdir -p /opt/app
-WORKDIR /opt/app
-COPY package.json package.json
-COPY package-lock.json package-lock.json
+# Set working directory
+WORKDIR /app
+
+# Copy package.json and install packages
+COPY package.json .
+COPY package-lock.json .
 RUN npm install
-COPY src/ .
+
+# Copy other project files and build
+COPY . ./
+RUN npm run build
 
 EXPOSE 3000
 CMD ["npm", "start"]
