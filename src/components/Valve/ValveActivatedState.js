@@ -9,7 +9,7 @@ const ValveActivatedState = ({number, states, updateValveActiveState, setValveAc
         setSw(states[number - 1]);
     }
     const onSwitchAction = () => {
-        setValveActivated(number, swValue).then(updateState);
+        setValveActivated(number, !swValue).then(updateState);
     };
     let name = `Вентиль ${number} ${swValue ? '': 'де'}активирован`;
     return (
