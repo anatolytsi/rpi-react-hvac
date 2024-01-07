@@ -34,6 +34,8 @@ class App extends React.Component {
             token: ''
         };
         this.thing = undefined;
+        this._intervalId = null;
+        this._interval = 10;
     }
 
     logout() {
@@ -62,6 +64,15 @@ class App extends React.Component {
         return this.state.isSuperuser;
     }
 
+    setUpdateInterval(interval = 10) {
+        if (this._intervalId)
+            clearInterval(this._intervalId);
+        this._intervalId = setInterval(() => this.loadData(), interval * 1000);
+        this._interval = interval;
+        const cookies = new Cookies();
+        cookies.set('updateInterval', this._interval);
+    }
+
     getHeaders() {
         let headers = {
             'Content-Type' : 'application/json',
@@ -78,7 +89,7 @@ class App extends React.Component {
         cookies.set('token', token, {secure: true, sameSite: 'none'});
         this.setState({token}, () => {
             this.loadData();
-            setInterval(() => this.loadData(), 10000);
+            this.setUpdateInterval(this._interval);
         });
     }
 
@@ -103,6 +114,7 @@ class App extends React.Component {
     getTokenFromStorage() {
         const cookies = new Cookies();
         const token = cookies.get('token');
+        this._interval = cookies.get('updateInterval');
         this.getToken({token});
     }
 
@@ -230,7 +242,9 @@ class App extends React.Component {
                     <Route exact path='/advanced' component={() => {
                         if (!this.isAuthenticated()) return <Redirect to='/login'/>;
                         if (!this.isSuperuser()) return <Redirect to='/simple'/>;
-                        return <PageAdvanced temperatureFeed={this.state.temperatureFeed}
+                        return <PageAdvanced updateInterval={this._interval}
+                                             setUpdateInterval={(interval) => this.setUpdateInterval(interval)}
+                                             temperatureFeed={this.state.temperatureFeed}
                                              temperatureOutside={this.state.temperatureOutside}
                                              temperatureInside={this.state.temperatureInside}
                                              temperatureHe1={this.state.temperatureHe1}

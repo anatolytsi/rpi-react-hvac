@@ -2,6 +2,7 @@ import React from 'react';
 import '../../App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+import UpdateInterval from "../UpdateInterval/UpdateInterval";
 import Mode from '../Mode/Mode';
 import Temperatures from '../Temperatures/Temperatures';
 import FeedTemperature from "../FeedTemperature/FeedTemperature";
@@ -11,6 +12,8 @@ import Hysteresis from "../Hysteresis/Hysteresis";
 
 const PageAdvanced = (
     {
+        updateInterval,
+        setUpdateInterval,
         temperatureFeed,
         temperatureOutside,
         temperatureInside,
@@ -34,6 +37,9 @@ const PageAdvanced = (
         <div className='MainPage'>
             <h1>Расширенная панель</h1>
             <header className='MainPage-header'>
+                <UpdateInterval updateInterval={updateInterval}
+                                setUpdateInterval={setUpdateInterval}
+                />
                 <FeedTemperature temperatureFeed={temperatureFeed}
                                  setFeedTemperature={setFeedTemperature}
                 />
